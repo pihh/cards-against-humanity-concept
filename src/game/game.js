@@ -80,6 +80,7 @@ class GameManager extends EventEmitter{
   }
 
   answer(player,id){
+    console.log(player)
     if (this.episode.state != "answer") return 
     if (!player.canAnswer) return 
 
