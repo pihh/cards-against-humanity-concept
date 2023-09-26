@@ -167,7 +167,7 @@ class GameManager extends EventEmitter{
       eventUuid: crypto.randomUUID(),
       history: this.history,
       lastEpisodeResult: this.lastEpisodeResult,
-      players: this.playerManager.getOnlinePlayers(this.id).map(el => el.uuid)
+      players: this.playerManager.getOnlinePlayers(this.id)//.map(el => el.uuid)
     }
   }
 
