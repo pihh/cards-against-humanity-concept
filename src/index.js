@@ -1,18 +1,18 @@
-require('dotenv').config();
+require("dotenv").config();
 
 /**
  * Module dependencies.
  */
 
-const app = require('./app');
-const http = require('http');
+const app = require("./app");
+const http = require("http");
 
 /**
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+const port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
 
 /**
  * Create HTTP server.
@@ -25,8 +25,8 @@ const server = http.createServer(app);
  */
 
 server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+server.on("error", onError);
+server.on("listening", onListening);
 
 /**
  * Normalize a port into a number, string, or false.
@@ -53,22 +53,20 @@ function normalizePort(val) {
  */
 
 function onError(error) {
-  if (error.syscall !== 'listen') {
+  if (error.syscall !== "listen") {
     throw error;
   }
 
-  const bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+    case "EACCES":
+      console.error(bind + " requires elevated privileges");
       process.exit(1);
       break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+    case "EADDRINUSE":
+      console.error(bind + " is already in use");
       process.exit(1);
       break;
     default:
@@ -82,13 +80,11 @@ function onError(error) {
 
 function onListening() {
   const addr = server.address();
-  const bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  console.log('App started. Listening on ' + bind);
+  const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  console.log("App started. Listening on " + bind);
 }
 
-/** 
+/**
  * RTC configurations
  */
 
@@ -97,75 +93,82 @@ const io = require("socket.io")(server, {
 });
 
 // const Game = require("./src/game3");
-const GameManager = require("./game/game")
-const Game = new GameManager()
+const GameManager = require("./game/game");
+const Game = new GameManager();
 
-Game.on('update-player', function(data){
-  console.log('manager event -> update-player', data)
-  try{
-
-    io.to(data.player.socketId).emit('update-player',data)
-  }catch(ex){
+Game.on("update-player", function (data) {
+  console.log("manager event -> update-player", data);
+  try {
+    io.to(data.player.socketId).emit("update-player", data);
+  } catch (ex) {
     // ...
   }
-})
+});
 
-Game.on('update-game', function(data){
-  console.log('manager event -> update-game', data)
-  try{
-
-    io.emit('update-game',data)
-  }catch(ex){
+Game.on("update-game", function (data) {
+  console.log("manager event -> update-game", data);
+  try {
+    io.emit("update-game", data);
+  } catch (ex) {
     // ...
   }
-})
+});
 
-io.on('connection', (socket) => {
-  console.log('new connection',socket.id);
+io.on("connection", (socket) => {
+  console.log("new connection", socket.id);
 
-  socket.on('handshake', (data)=> {
-    const player = Game.playerManager.registerPlayer(data.uuid,data.username,socket.id)
-    console.log('handshake', data);
+  socket.on("handshake", (data) => {
+    const player = Game.playerManager.registerPlayer(
+      data.uuid,
+      data.username,
+      socket.id
+    );
+    console.log("handshake", data);
     io.to(socket.id).emit("identified", player);
+  });
 
-  })
+  socket.on("join", (data) => {
+    const player = Game.playerManager.getPlayer(socket.id);
+    console.log("join", player);
+    Game.join(player);
+  });
 
-  socket.on('join', (data)=> {
-    const player = Game.playerManager.getPlayer(socket.id)
-    console.log('join', player);
-    Game.join(player)
-  })
+  socket.on("update-username", (data) => {
+    const player = Game.playerManager.getPlayer(socket.id);
+    console.log("update-username", player);
+    Game.updateUsername(player, data);
+  });
 
-  socket.on('update-username',(data)=>{
-    const player = Game.playerManager.getPlayer(socket.id)
-    console.log('update-username', player);
-    Game.updateUsername(player,data)
-  })
-
-  socket.on('answer', (data)=> {
-    const player = Game.playerManager.getPlayer(socket.id)
-    console.log('answer', data);
-    Game.answer(player,data)
+  socket.on("answer", (data) => {
+    const player = Game.playerManager.getPlayer(socket.id);
+    console.log("answer", data);
+    Game.answer(player, data);
     //io.to(socket.id).emit("identified", player);
+  });
 
-  })
+  socket.on("vote", (data) => {
+    const player = Game.playerManager.getPlayer(socket.id);
+    console.log("vote", data);
+    Game.vote(player, data);
+  });
 
-  socket.on('vote', (data)=> {
-    const player = Game.playerManager.getPlayer(socket.id)
-    console.log('vote', data);
-    Game.vote(player,data)
+  // socket.on("voice", function (data) {
+  //   var newData = data.split(";");
+  //   newData[0] = "data:audio/ogg;";
+  //   newData = newData[0] + newData[1];
 
+  //   for (const id in socketsStatus) {
 
-  })
+  //     if (id != socketId && !socketsStatus[id].mute && socketsStatus[id].online)
+  //       io.to(id).emit("voice-message", newData);
+  //   }
+  // });
 
   socket.on("disconnect", () => {
-    
     console.log("disconnected", socket.id);
-    let player = Game.playerManager.getPlayer(socket.id)
-    if(player){
-      Game.leave(player)//.online = false;
+    let player = Game.playerManager.getPlayer(socket.id);
+    if (player) {
+      Game.leave(player); //.online = false;
     }
-   
-  })
-
+  });
 });
