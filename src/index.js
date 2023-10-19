@@ -97,8 +97,9 @@ const GameManager = require("./game/game");
 const Game = new GameManager();
 
 Game.on("update-player", function (data) {
-  console.log("manager event -> update-player", data);
+  // console.log("manager event -> update-player", data);
   try {
+    console.log({socketId: data.player.socketId,data})
     io.to(data.player.socketId).emit("update-player", data);
   } catch (ex) {
     // ...
@@ -106,7 +107,7 @@ Game.on("update-player", function (data) {
 });
 
 Game.on("update-game", function (data) {
-  console.log("manager event -> update-game", data);
+  // console.log("manager event -> update-game", data);
   try {
     io.emit("update-game", data);
   } catch (ex) {
@@ -123,46 +124,64 @@ io.on("connection", (socket) => {
       data.username,
       socket.id
     );
+    // player.gameData= Game.getData()
+    // player.gameData.players = []
     console.log("handshake", data);
+    player.game = Game.getData()
     io.to(socket.id).emit("identified", player);
   });
 
   socket.on("join", (data) => {
     const player = Game.playerManager.getPlayer(socket.id);
-    console.log("join", player);
+ 
     Game.join(player);
   });
 
   socket.on("update-username", (data) => {
     const player = Game.playerManager.getPlayer(socket.id);
-    console.log("update-username", player);
+    // console.log("update-username", player);
     Game.updateUsername(player, data);
   });
 
   socket.on("answer", (data) => {
     const player = Game.playerManager.getPlayer(socket.id);
-    console.log("answer", data);
+    // console.log("answer", data);
     Game.answer(player, data);
     //io.to(socket.id).emit("identified", player);
   });
 
   socket.on("vote", (data) => {
     const player = Game.playerManager.getPlayer(socket.id);
-    console.log("vote", data);
+    // console.log("vote", data);
     Game.vote(player, data);
   });
 
-  // socket.on("voice", function (data) {
-  //   var newData = data.split(";");
-  //   newData[0] = "data:audio/ogg;";
-  //   newData = newData[0] + newData[1];
+  socket.on("voice", function (data) {
+    try{
+      console.log("voice", data);
+      if(data){
+        
+        // var newData = data.split(";");
+        // newData[0] = "data:audio/ogg;";
+        // newData = newData[0] + newData[1];
+        const player = Game.playerManager.getPlayer(socket.id);
+        let onlinePlayers = Game.playerManager.getOnlinePlayers()
+        console.log({onlinePlayers})
+        for(let onlinePlayer of onlinePlayers){
+          if(onlinePlayer.id !== player.id){
+            io.to(onlinePlayer.socketId).emit("voice-message", data);
 
-  //   for (const id in socketsStatus) {
+            console.log('')
+            console.log('emited voice message')
+          }
 
-  //     if (id != socketId && !socketsStatus[id].mute && socketsStatus[id].online)
-  //       io.to(id).emit("voice-message", newData);
-  //   }
-  // });
+        }
+      }
+    }catch(ex){
+      console.warn("Voice emit error",ex)
+    }
+  
+  });
 
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);

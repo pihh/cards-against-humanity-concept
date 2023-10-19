@@ -29,6 +29,7 @@ class GameManager extends EventEmitter{
     answers: [],
     player_answers: [],
     player_votes: [],
+    timeout: 120,
     state: "starting", // Answer , Vote , Results, End
     result: {
       state: "winner", // "winner","draw","failed"
@@ -55,10 +56,11 @@ class GameManager extends EventEmitter{
     this.updateGame('update-username')
   }
   join(player){
+    // console.log('join',player)
     player = this.playerManager.getPlayer(player.uuid)
     
     if(player.game === this.id){
-        
+      player.game = this.id 
     }else{
       player.game = this.id 
       player.reset()
@@ -66,10 +68,14 @@ class GameManager extends EventEmitter{
     player.canVote = true;
     player.canAnswer = true;
     player.online = true;
+
+    
+
+
+      this.updatePlayer('joined',player)
+      this.draw(player)
+      this.updateGame('player-joined')
   
-    this.updatePlayer('joined',player)
-    this.draw(player)
-    this.updateGame('player-joined')
     
   }
 
@@ -80,7 +86,7 @@ class GameManager extends EventEmitter{
   }
 
   answer(player,id){
-    console.log(player)
+    // console.log(player)
     if (this.episode.state != "answer") return 
     if (!player.canAnswer) return 
 
@@ -106,6 +112,9 @@ class GameManager extends EventEmitter{
     player.canVote = false;
     
     this.episode.player_votes.push(player.uuid);
+
+   
+
     this.episode.answers[id].count += 1;
 
     this.updatePlayer('voted',player)
@@ -162,6 +171,10 @@ class GameManager extends EventEmitter{
     console.log('@TODO')
   }
   getData(){
+    console.log('ep')
+    console.log(this.episode)
+    console.log(this.playerManager.getOnlinePlayers(this.id))
+    console.log('')
     return {
       episode: this.episode,
       eventUuid: crypto.randomUUID(),
@@ -173,6 +186,8 @@ class GameManager extends EventEmitter{
 
   updateGame(eventName){
     const data = this.getData()
+    console.log('updateGame', {eventName,data})
+
     this.emit('update-game',{
       eventName,
       ...data
@@ -192,11 +207,14 @@ class GameManager extends EventEmitter{
   countdownInterval = false;
   startCountdown(seconds = 120){
     this.countdown = seconds
+    this.episode.timeout = seconds;
     clearInterval(this.countdownInterval)
 
     this.countdownInterval = setInterval(() => {
       if(this.playerManager.getOnlinePlayers(this.id).length > 0){
+        
         this.countdown -= 1;
+        this.episode.timeout = this.countdown;
         //console.log(this.countdown)
         if(this.countdown == 0){
           clearInterval(this.countdownInterval)
@@ -306,6 +324,7 @@ class GameManager extends EventEmitter{
       complete: false,
       player_answers: [],
       player_votes: [],
+      timeout: 120,
       result: {
         state: "winner", // "winner","draw","failed" , "no-answers"
         winner: {},
