@@ -4,10 +4,11 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "prisma db push && nodemon ./src/index",
+    "dev_original": "prisma db push && nodemon ./src/index",
     "start": "prisma db push && node ./src/index",
     "mongo-start": "docker run -d -p 27017-27019:27017-27019 --name mongo-dev adaptable/mongo-replica-set",
-    "mongo-stop": "docker rm -f mongo-dev"
+    "mongo-stop": "docker rm -f mongo-dev",
+    "dev": "nodemon --inspect-brk ./src/index.js"
   },
   "dependencies": {
     "@prisma/client": "^3.14.0",

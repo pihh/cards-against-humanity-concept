@@ -99,7 +99,8 @@ const Game = new GameManager();
 Game.on("update-player", function (data) {
   // console.log("manager event -> update-player", data);
   try {
-    console.log({socketId: data.player.socketId,data})
+   
+    // console.log({socketId: data.player.socketId,data})
     io.to(data.player.socketId).emit("update-player", data);
   } catch (ex) {
     // ...
@@ -109,6 +110,7 @@ Game.on("update-player", function (data) {
 Game.on("update-game", function (data) {
   // console.log("manager event -> update-game", data);
   try {
+    console.log('update-game',data)
     io.emit("update-game", data);
   } catch (ex) {
     // ...
@@ -127,7 +129,7 @@ io.on("connection", (socket) => {
     // player.gameData= Game.getData()
     // player.gameData.players = []
     console.log("handshake", data);
-    player.game = Game.getData()
+    // player.game = Game.getData()
     io.to(socket.id).emit("identified", player);
   });
 
@@ -140,6 +142,7 @@ io.on("connection", (socket) => {
   socket.on("update-username", (data) => {
     const player = Game.playerManager.getPlayer(socket.id);
     // console.log("update-username", player);
+
     Game.updateUsername(player, data);
   });
 
@@ -169,10 +172,15 @@ io.on("connection", (socket) => {
         console.log({onlinePlayers})
         for(let onlinePlayer of onlinePlayers){
           if(onlinePlayer.id !== player.id){
-            io.to(onlinePlayer.socketId).emit("voice-message", data);
+            try{
 
-            console.log('')
-            console.log('emited voice message')
+              io.to(onlinePlayer.socketId).emit("voice-message", data);
+              
+              console.log('')
+              console.log('emited voice message')
+            }catch(ex){
+              
+            }
           }
 
         }
