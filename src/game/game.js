@@ -168,7 +168,7 @@ class GameManager extends EventEmitter {
       return;
     }
     // Add player cards to the stack
-
+    
     for (let player of players) {
       for (let i = player.hand.length - 1; i >= 0; i--) {
         let card = player.hand.pop(i);
