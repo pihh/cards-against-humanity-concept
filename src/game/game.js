@@ -48,15 +48,19 @@ class GameManager extends EventEmitter {
   }
 
   updateUsername(player, username) {
-    player = this.playerManager.getPlayer(player.uuid);
-    player.username = username;
-    this.updatePlayer("update-username", player);
-    this.updateGame("update-username");
+    // console.log('updateUsername',{player: player, username: username});
+    if(username && player){
+
+      player = this.playerManager.getPlayer(player.uuid);
+      player.username = username;
+      this.updatePlayer("update-username", player);
+      this.updateGame("update-username");
+    }
   }
   join(player) {
     // console.log('join',player)
     player = this.playerManager.getPlayer(player.uuid);
-
+    
     if (player.game === this.id) {
       player.game = this.id;
     } else {
@@ -125,7 +129,7 @@ class GameManager extends EventEmitter {
             .sort()
             .toString()
       ) {
-        console.log("will step ep");
+        // console.log("will step ep");
         this.stepEpisode();
         hasUpdated = true;
       }
@@ -144,7 +148,7 @@ class GameManager extends EventEmitter {
       }
     }
     if (!hasUpdated) {
-      console.log("didnt step ep");
+      // console.log("didnt step ep");
       this.updateGame("update-episode");
     }
   }
@@ -192,19 +196,35 @@ class GameManager extends EventEmitter {
     console.log("@TODO");
   }
   getData() {
-
+    const episode = JSON.parse(JSON.stringify(this.episode));
+   
+    const onlinePlayers = this.playerManager.getOnlinePlayers(this.id)
+    let missing_actions_key = ""
+    episode.missing_actions = onlinePlayers.map((el)=>el.uuid)
+    
+    if(episode.state == "answer" || episode.state == "vote"){
+      console.log('state ok')
+      missing_actions_key = "player_"+episode.state+"s"
+      
+      for(let completePlayer of episode[missing_actions_key]){
+        let idx = episode.missing_actions.indexOf(completePlayer)
+        if(idx > -1){
+          episode.missing_actions.splice(idx, 1);
+        }
+      }
+    }
     return {
-      episode: this.episode,
+      episode: episode,
       eventUuid: crypto.randomUUID(),
       history: this.history,
       lastEpisodeResult: this.lastEpisodeResult,
-      players: this.playerManager.getOnlinePlayers(this.id), //.map(el => el.uuid)
+      players: onlinePlayers
     };
   }
 
   updateGame(eventName) {
     const data = this.getData();
-    console.log("updateGame", { eventName, data });
+    // console.log("updateGame", { eventName, data });
 
     this.emit("update-game", {
       eventName,
@@ -243,7 +263,7 @@ class GameManager extends EventEmitter {
   }
 
   stepEpisode() {
-    console.log("step episode", this.episode);
+    // console.log("step episode", this.episode);
     if (this.episode.state === "answer") {
       if (this.episode.player_answers.length > 0) {
         this.episode.state = "vote";

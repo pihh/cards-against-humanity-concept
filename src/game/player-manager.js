@@ -31,7 +31,7 @@ class Player {
 const PlayerManager = {
   players: [],
   getPlayer(id) {
-    return this.players.filter((el) => el.uuid == id || el.socketId == id)[0];
+    return this.players.filter((el) => el.uuid == id || el.socketId == id)[0] ;
   },
   getPlayerIndex(id) {
     let index = -1;
@@ -46,20 +46,22 @@ const PlayerManager = {
   },
   registerPlayer(uuid, username, socketId) {
     let player = this.getPlayer(uuid);
+    //console.log("registerPlayer",{uuid,username,socketId,player});
     if (uuid !== "" && username !== "" && player) {
+      // console.log('has playser, register player',player)
       player.socketId = socketId;
       player.online = true;
       player.firstConnection = false;
     } else {
       uuid = uuid || crypto.randomUUID() + Date.now();
       username =
-        username ||
         uniqueNamesGenerator({
           dictionaries: [adjectives, colors, animals],
         }).split('-').slice(0, 2).join(' ');
       player = new Player(socketId, uuid, username);
       player.online = true;
       player.firstConnection = true;
+      // console.log('new one',{player})
       this.players.push(player);
     }
     return player;

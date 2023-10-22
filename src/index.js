@@ -110,7 +110,7 @@ Game.on("update-player", function (data) {
 Game.on("update-game", function (data) {
   // console.log("manager event -> update-game", data);
   try {
-    console.log('update-game',data)
+    // console.log('update-game',data)
     io.emit("update-game", data);
   } catch (ex) {
     // ...
@@ -118,7 +118,7 @@ Game.on("update-game", function (data) {
 });
 
 io.on("connection", (socket) => {
-  console.log("new connection", socket.id);
+  // console.log("new connection", socket.id);
 
   socket.on("handshake", (data) => {
     const player = Game.playerManager.registerPlayer(
@@ -128,7 +128,7 @@ io.on("connection", (socket) => {
     );
     // player.gameData= Game.getData()
     // player.gameData.players = []
-    console.log("handshake", data);
+    // console.log("handshake", {data, player});
     // player.game = Game.getData()
     io.to(socket.id).emit("identified", player);
   });
@@ -140,7 +140,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update-username", (data) => {
-    const player = Game.playerManager.getPlayer(socket.id);
+    let player = Game.playerManager.getPlayer(socket.id);
+    // if(!player?.username){
+    //   player = Game.playerManager.registerPlayer("","",socket.id);
+    // }
     // console.log("update-username", player);
 
     Game.updateUsername(player, data);
@@ -161,7 +164,7 @@ io.on("connection", (socket) => {
 
   socket.on("voice", function (data) {
     try{
-      console.log("voice", data);
+      // console.log("voice", data);
       if(data){
         
         // var newData = data.split(";");
@@ -169,15 +172,15 @@ io.on("connection", (socket) => {
         // newData = newData[0] + newData[1];
         const player = Game.playerManager.getPlayer(socket.id);
         let onlinePlayers = Game.playerManager.getOnlinePlayers()
-        console.log({onlinePlayers})
+        // console.log({onlinePlayers})
         for(let onlinePlayer of onlinePlayers){
           if(onlinePlayer.id !== player.id){
             try{
 
               io.to(onlinePlayer.socketId).emit("voice-message", data);
               
-              console.log('')
-              console.log('emited voice message')
+              // console.log('')
+              // console.log('emited voice message')
             }catch(ex){
               
             }
